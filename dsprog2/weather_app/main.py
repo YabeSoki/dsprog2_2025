@@ -1,5 +1,10 @@
 import flet as ft
 import requests
+import sqlite3
+
+def get_conn():
+    return sqlite3.connect("weather.db")
+
 
 def main(page: ft.Page):
     page.title = "天気予報アプリ"
@@ -66,6 +71,26 @@ def main(page: ft.Page):
                     border_radius=10,
                 )
             )
+
+            conn = get_conn()
+            cur = conn.cursor()
+
+            for i in range(min(7, len(dates))):
+                raw_date = dates[i][:10]
+                weather = weathers[i].replace("　", " ")
+
+                cur.execute(
+                    """
+                    INSERT INTO weather (
+                        area_code, area_name, date, weather
+                    ) VALUES (?, ?, ?, ?)
+                    """,
+                    (area_code, area_name, raw_date, weather)
+                )
+
+            conn.commit()
+            conn.close()
+
 
         page.update()
 
